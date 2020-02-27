@@ -14,11 +14,14 @@ defaults:
     values:
       image: true
 
-title: Minimalism
-name: minimalism
-description: Minimalism is a jekyll theme for minimalist
+title: 记录日常的技术专栏
+name: Wong's blog
+description: 欢迎进入到我的博客
 
-github: https://github.com/showzeng/Minimalism
+theme: jekyll-theme-minimalism
+# remote_theme: HyiKi/HyiKi.github.io
+
+github: https://github.com/HyiKi/HyiKi.github.io
 rss: true
 
 plugins:

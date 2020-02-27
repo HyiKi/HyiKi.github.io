@@ -5,9 +5,10 @@
 [![Gem Version](https://badge.fury.io/rb/jekyll-theme-minimalism.svg)](https://badge.fury.io/rb/jekyll-theme-minimalism)
 [![Packagist](https://img.shields.io/packagist/l/doctrine/orm.svg?style=popout)](./LICENSE.txt)
 
-![screenshot](./docs/screenshot.png)
+<!-- ![screenshot](./docs/screenshot.png) -->
 
-Minimalism 是一款基于 Jekyll 为极简主义者打造的极简主题。你可以访问 [我的博客][blog] 或者 [主题 demo][demo] 来预览一下。
+Minimalism 是一款基于 Jekyll 为极简主义者打造的极简主题。你可以访问 [我的博客][blog]
+ <!-- 或者 [主题 demo][demo] 来预览一下。 -->
 
 ## 特性
 
@@ -49,7 +50,7 @@ theme: jekyll-theme-minimalism
 
 ```yaml
 # theme: jekyll-theme-minimalism
-remote_theme: showzeng/Minimalism
+remote_theme: HyiKi/HyiKi.github.io
 ```
 
 ## 使用
@@ -78,21 +79,22 @@ remote_theme: showzeng/Minimalism
 
 查看 [版本更新日志][Change Log]
 
-## 打赏
+<!-- ## 打赏
 
 如果主题对你有帮助，并帮你节省了一些折腾的时间，可以考虑打赏，这是对我所做工作的最大肯定。
 
-![reward.png](./docs/reward.webp)
+![reward.png](./docs/reward.webp) -->
 
 ## License
 
 The theme is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
 
-[blog]: https://showzeng.itscoder.com
+<!-- [blog]: https://showzeng.itscoder.com
 [demo]: https://showzeng.github.io
 [license]: https://creativecommons.org/licenses/by-nc-nd/4.0/
 [wiki]: https://github.com/showzeng/Minimalism/wiki
 [issue]: https://github.com/showzeng/Minimalism/issues/new
 [Change Log]: https://github.com/showzeng/Minimalism/wiki/Change-Log
 [HenCoder]: https://hencoder.com/
-[Jaeger]: https://jaeger.itscoder.com/
+[Jaeger]: https://jaeger.itscoder.com/ -->
+[blog]: https://hyiki.github.io/
