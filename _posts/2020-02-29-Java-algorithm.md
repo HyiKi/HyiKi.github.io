@@ -45,13 +45,20 @@ Scanner类提供了非常丰富的成员函数来负责读取各种数据类型:
 | long nextLong()             | 将输入信息的下一个标记扫描为一个 long                        |
 | short nextShort()           | 将输入信息的下一个标记扫描为一个 short                       |
 
-**对于输出浮点数保留几位小数的问题，可以使用DecimalFormat类**， 
+**对于输出浮点数保留几位小数的问题，可以使用DecimalFormat类**，
+
 import java.text.*; 
+
 DecimalFormat f = new DecimalFormat("#.00#"); 
+
 DecimalFormat g = new DecimalFormat("0.000"); 
+
 double a = 123.45678, b = 0.12; 
+
 System.out.println(f.format(a)); //123.457
+
 System.out.println(f.format(b)); //.12
+
 System.out.println(g.format(b)); //0.120
 
 
@@ -130,8 +137,10 @@ public class Main {
 3. 布尔类型为 boolean，只有true和false二值，在 if (...) / while (...) 等语句的条件中必须为boolean类型。 **在C/C++中的 if (n % 2) ... 在Java中无法编译通过。** 
 4. 下面在java.util包里Arrays类的几个方法可替代C/C++里的**memset**、**qsort/sort** 和 bsearch: 
 
-**Arrays.fill()** 
-**Arrays.sort()** 
+**Arrays.fill()**
+
+**Arrays.sort()**
+
 Arrays.binarySearch() 
 
 
@@ -139,6 +148,7 @@ Arrays.binarySearch()
 #### 六.变量的初始化值
 
 只有成员变量才有默认值，而局部变量必须要赋初值，为什么非怎么设置？下面我们来看一下。
+
 | 类型           | 值                               |
 | -------------- | -------------------------------- |
 | Int            | 0                                |
