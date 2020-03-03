@@ -1,3 +1,5 @@
-# Minimalism demo
+1、本博客的原创的文章，都是本人平时学习所做的笔记。
 
-This is the demo of Jekyll theme minimalism, you can find out how to config and use this theme.
+2、本博客的文章，未注明原创的，来自其它博客或网站内容整合，作为自己的参考学习资料，感谢这些文章的原创者。
+
+3、如有侵犯您的知识产权和版权问题，请通知本人，本人会即时做出处理删除文章。
