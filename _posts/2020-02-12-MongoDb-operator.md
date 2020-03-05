@@ -6,7 +6,71 @@ tags: [Java,MongoDB]
 excerpt: Java项目上操作MongoDB实现增删改查
 ---
 
+### 导入依赖包
+
+```
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-mongodb</artifactId>
+        </dependency>
+```
+
+### MongoConfig配置
+
+在配置文件夹中，写MongoConfig配置
+
+```
+package com.example.weixin.config;
+
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.core.convert.CustomConversions;
+import org.springframework.data.mongodb.core.convert.DbRefResolver;
+import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
+import org.springframework.data.mongodb.core.convert.DefaultMongoTypeMapper;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+
+@Configuration
+public class MongoConfig {
+    @Bean
+    public MappingMongoConverter mappingMongoConverter(MongoDbFactory factory, MongoMappingContext context, BeanFactory beanFactory) {
+        DbRefResolver dbRefResolver = new DefaultDbRefResolver(factory);
+        MappingMongoConverter mappingConverter = new MappingMongoConverter(dbRefResolver, context);
+        try {
+            mappingConverter.setCustomConversions(beanFactory.getBean(CustomConversions.class));
+        }
+        catch (NoSuchBeanDefinitionException ignore) {}
+
+        // Don't save _class to mongo
+        mappingConverter.setTypeMapper(new DefaultMongoTypeMapper(null));
+
+        return mappingConverter;
+    }
+}
+```
+
+### Mongo连接配置文件
+
+以.yml文件为例
+
+```
+data:
+    mongodb:
+      username: user_miniprogram
+      password: ENC(NT3JIFFJpwJE2ziIn74GmoP5+5omqaV/Vpmns0X9c1U=)
+      host: 172.19.13.51
+      port: 27017
+      database: library_miniprogram
+      authentication-database: library_miniprogram
+```
+
 ### MongoTemplate基本操作
+
+在持久层中实现对MongoDB的基本操作
 
 ```
 package com.wlsq.oauth.dao.impl;
