@@ -209,3 +209,70 @@ str = String.valueOf(bm);//char[]->String
 | String substring(int beginIndex, int endIndex) | 返回一个字符串，该字符串是此字符串的子字符串                 |
 | char[] toCharArray()                           | 将此字符串转换为新的字符数组                                 |
 | static String valueOf(char[] data)             | 返回 char数组参数的字符串 char形式                           |
+
+
+
+#### 九、数组
+
+System.arraycopy应用于自制数组ArrayList的remove删除元素
+
+System.arraycopy(elements, index + 1, elements, index, moveSize);
+
+```
+public static void arraycopy(Object src, int srcPos, Object dest, int destPos, int length)
+代码解释:
+　　Object src : 原数组
+   int srcPos : 从元数据的起始位置开始
+　　Object dest : 目标数组
+　　int destPos : 目标数组的开始起始位置
+　　int length  : 要copy的数组的长度
+```
+
+------
+
+Arrays.copyOf() 应用于自制数组ArrayList的add扩容
+
+Arrays的copyOf()方法传回的数组是**新的数组对象**，改变传回数组中的元素值，不会影响原来的数组。
+copyOf()的第二个自变量指定要建立的**新数组长度**，如果新数组的长度**超过**原数组的长度，则**保留**数组默认值，例如：
+
+```
+import java.util.Arrays;
+
+public class ArrayDemo {
+	public static void main(String[] args) {
+    	int[] arr1 = {1, 2, 3, 4, 5}; 
+    	int[] arr2 = Arrays.copyOf(arr1, 5);
+    	int[] arr3 = Arrays.copyOf(arr1, 10);
+    	for(int i = 0; i < arr2.length; i++) 
+        	System.out.print(arr2[i] + " "); 
+    		System.out.println();
+    	for(int i = 0; i < arr3.length; i++) 
+        	System.out.print(arr3[i] + " ");
+	}
+}
+```
+
+运行结果：
+
+```
+1 2 3 4 5 
+1 2 3 4 5 0 0 0 0 0
+```
+
+
+
+#### 十、进制
+
+二进制转十进制
+
+```
+int a = Integer.valueOf(in.next(),2);
+```
+
+十进制转二进制
+
+```
+BigInteger b = BigInteger.valueOf(in.nextLong());
+String bin = b.toString(2);
+```
+
