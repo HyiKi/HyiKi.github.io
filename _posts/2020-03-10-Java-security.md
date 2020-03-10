@@ -1,6 +1,6 @@
 ---
 title: Spring Security框架(持续学习中)
-date:  	2020-03-09 14:56:36 +0800
+date:  	2020-03-10 14:56:36 +0800
 category: Original
 tags: [Java,FrameWork]
 excerpt: Spring FrameWork + Spring Security对用户完成认证、授权操作。
@@ -672,4 +672,628 @@ public class HandlerControllerAdvice{
 
 }
 ```
+
+### Spring-Security整合Spring Boot
+
+#### 集中式，基础
+
+##### Spring-Boot依赖包
+
+```
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>2.1.3.RELEASE</version>
+        <relativePath/>
+    </parent>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+    <dependencies>
+```
+
+##### Spring-Security依赖包
+
+```
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+```
+
+##### Spring-Boot的tomcat启动依赖包
+
+```
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-tomcat</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.tomcat.embed</groupId>
+            <artifactId>tomcat-embed-jasper</artifactId>
+        </dependency>
+```
+
+##### 数据库依赖包
+
+```
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>5.1.47</version>
+        </dependency>
+        <dependency>
+            <groupId>tk.mybatis</groupId>
+            <artifactId>mapper-spring-boot-starter</artifactId>
+            <version>2.1.5</version>
+        </dependency>
+```
+
+##### yml配置文件
+
+```
+spring:
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://<host:port>/<database>
+    username: root
+    password: root
+mybatis:
+  type-aliases-package: <entity实体类>
+  configuration:
+    map-underscore-to-camel-case: true
+logging:
+  level:
+    com.itheima: debug
+```
+
+##### 在启动类上添加扫描dao接口包注解
+
+```
+@MapperScan("<dao持久层类>")
+```
+
+##### 创建entity实体类对象
+
+**角色**
+
+这里直接使用Spring Security的角色规范，且注意要实现`GrantedAuthority`接口来重写`getAuthority`方法获取当前用户的权限
+
+```
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.springframework.security.core.GrantedAuthority;
+
+public class SysRole implements GrantedAuthority {
+
+    private Integer id;
+    private String roleName;
+    private String roleDesc;
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public String getRoleName() {
+        return roleName;
+    }
+
+    public void setRoleName(String roleName) {
+        this.roleName = roleName;
+    }
+
+    public String getRoleDesc() {
+        return roleDesc;
+    }
+
+    public void setRoleDesc(String roleDesc) {
+        this.roleDesc = roleDesc;
+    }
+
+    @JsonIgnore
+    @Override
+    public String getAuthority() {
+        return roleName;
+    }
+}
+```
+
+**用户**
+
+这里直接实现Spring Security的用户对象接口，并添加角色集合私有属性`private List<SysRole> roles;`。注意接口属性都要标记不被Json处理，实现`UserDetails`接口重写`getUsername`、`getPassword`、`isAccountNonExpired`、`isAccountNonLocked`、`isCredentialsNonExpired`、`isEnabled`、`getAuthorities`方法
+
+```
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
+import java.util.Collection;
+import java.util.List;
+
+public class SysUser implements UserDetails {
+
+    private Integer id;
+    private String username;
+    private String password;
+    private Integer status;
+    private List<SysRole> roles;
+
+    public List<SysRole> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(List<SysRole> roles) {
+        this.roles = roles;
+    }
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public Integer getStatus() {
+        return status;
+    }
+
+    public void setStatus(Integer status) {
+        this.status = status;
+    }
+
+    @JsonIgnore
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return roles;
+    }
+
+    @Override
+    public String getPassword() {
+        return password;
+    }
+
+    @Override
+    public String getUsername() {
+        return username;
+    }
+
+    @JsonIgnore
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @JsonIgnore
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @JsonIgnore
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @JsonIgnore
+    @Override
+    public boolean isEnabled() {
+        return true;
+    }
+}
+```
+
+##### 提供持久层dao.mapper接口
+
+需要继承Mapper\<T>，通过执行SQL语句可以自动将数据库的值映射到返回值（类的对象）中
+
+**角色**
+
+```
+import org.apache.ibatis.annotations.Select;
+import tk.mybatis.mapper.common.Mapper;
+
+import java.util.List;
+
+public interface RoleMapper extends Mapper<SysRole> {
+
+    @Select("SELECT r.id, r.role_name roleName, r.role_desc roleDesc " +
+            "FROM sys_role r, sys_user_role ur " +
+            "WHERE r.id=ur.rid AND ur.uid=#{uid}")
+    public List<SysRole> findByUid(Integer uid);
+}
+```
+
+**用户**
+
+```
+import org.apache.ibatis.annotations.Many;
+import org.apache.ibatis.annotations.Result;
+import org.apache.ibatis.annotations.Results;
+import org.apache.ibatis.annotations.Select;
+import tk.mybatis.mapper.common.Mapper;
+
+import java.util.List;
+
+public interface UserMapper extends Mapper<SysUser> {
+
+    @Select("select * from sys_user where username = #{username}")
+    @Results({
+            @Result(id = true, property = "id", column = "id"),
+            @Result(property = "roles", column = "id", javaType = List.class,
+                many = @Many(select = "com.demo.dao.RoleMapper.findByUid"))
+    })
+    public SysUser findByName(String username);
+
+}
+```
+
+##### 编写service业务层
+
+**认证service**
+
+注意需要继承`UserDetailsService`，需要在impl中重写`loadUserByUsername`的方法
+
+```
+import org.springframework.security.core.userdetails.UserDetailsService;
+
+public interface UserService extends UserDetailsService {
+}
+```
+
+```
+import com.itheima.mapper.UserMapper;
+import com.itheima.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@Transactional
+public class UserServiceImpl implements UserService {
+
+    @Autowired
+    private UserMapper userMapper;//启动类中扫描了mapper，因此可以自动注入
+
+    @Override
+    public UserDetails loadUserByUsername(String s) throws UsernameNotFoundException {
+        return userMapper.findByName(s);
+    }
+
+}
+```
+
+##### 修改配置类（这里是集中式的配置）
+
+```
+@Configuration
+@EnableWebSecurity
+@EnableGlobalMethodSecurity(securedEnabled=true)
+public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
+
+    @Autowired
+    private UserService userService;
+
+    @Bean
+    public BCryptPasswordEncoder passwordEncoder(){
+        return new BCryptPasswordEncoder();
+    }
+
+    //指定认证对象的来源
+    public void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.userDetailsService(userService).passwordEncoder(passwordEncoder());
+    }
+    //SpringSecurity配置信息
+    public void configure(HttpSecurity http) throws Exception {
+        http.authorizeRequests()
+                .antMatchers("/login.jsp", "failer.jsp", "/css/**", "/img/**", "/plugins/**").permitAll()
+                .antMatchers("/product").hasAnyRole("USER")
+                .anyRequest().authenticated()
+                .and()
+                .formLogin()
+                .loginPage("/login.jsp")
+                .loginProcessingUrl("/login")
+                .successForwardUrl("/index.jsp")
+                .failureForwardUrl("/failer.jsp")
+                .and()
+                .logout()
+                .logoutSuccessUrl("/logout")
+                .invalidateHttpSession(true)
+                .logoutSuccessUrl("/login.jsp")
+                .and()
+                .csrf()
+                .disable();
+    }
+}
+```
+
+##### 解决接口授权问题
+
+1. 在启动类添加注释`@EnableGlobalMethodSecurity(securedEnabled=true)`
+2. 控制层的接口处添加注释`@Secured("<角色>")`
+
+#### 分布式，重点！
+
+分布式认证适用于前后端分离的项目，比较适合当前的网页开发。
+
+##### 分布式认证概念
+
+1. 客户端用户向认证服务器发起认证请求
+2. 持有私钥的A系统认证服务器给用户返回解密后认证通行的token
+3. 用户在客服端中携带着被加密后的token访问持有公钥的B系统资源服务器
+4. 在B系统中会对token的真伪进行检验
+
+##### 非对称加密RSA
+
+- 基本原理：同时生成两把密钥：私钥和公钥，私钥隐秘保存，公钥可以下发给信任客户端 
+  - 私钥加密，持有私钥或公钥才可以解密 
+  - 公钥加密，持有私钥才可解密 
+- 优点：安全，难以破解 
+- 缺点：算法比较耗时，为了安全，可以接受 
+
+**RSA工具类Utils**
+
+```
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.security.*;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.Base64;
+public class RsaUtils {
+
+    private static final int DEFAULT_KEY_SIZE = 2048;
+    /**
+     * 从文件中读取公钥
+     *
+     * @param filename 公钥保存路径，相对于classpath
+     * @return 公钥对象
+     * @throws Exception
+     */
+    public static PublicKey getPublicKey(String filename) throws Exception {
+        byte[] bytes = readFile(filename);
+        return getPublicKey(bytes);
+    }
+
+    /**
+     * 从文件中读取密钥
+     *
+     * @param filename 私钥保存路径，相对于classpath
+     * @return 私钥对象
+     * @throws Exception
+     */
+    public static PrivateKey getPrivateKey(String filename) throws Exception {
+        byte[] bytes = readFile(filename);
+        return getPrivateKey(bytes);
+    }
+
+    /**
+     * 获取公钥
+     *
+     * @param bytes 公钥的字节形式
+     * @return
+     * @throws Exception
+     */
+    private static PublicKey getPublicKey(byte[] bytes) throws Exception {
+        bytes = Base64.getDecoder().decode(bytes);
+        X509EncodedKeySpec spec = new X509EncodedKeySpec(bytes);
+        KeyFactory factory = KeyFactory.getInstance("RSA");
+        return factory.generatePublic(spec);
+    }
+
+    /**
+     * 获取密钥
+     *
+     * @param bytes 私钥的字节形式
+     * @return
+     * @throws Exception
+     */
+    private static PrivateKey getPrivateKey(byte[] bytes) throws NoSuchAlgorithmException, InvalidKeySpecException {
+        bytes = Base64.getDecoder().decode(bytes);
+        PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(bytes);
+        KeyFactory factory = KeyFactory.getInstance("RSA");
+        return factory.generatePrivate(spec);
+    }
+
+    /**
+     * 根据密文，生存rsa公钥和私钥,并写入指定文件
+     *
+     * @param publicKeyFilename  公钥文件路径
+     * @param privateKeyFilename 私钥文件路径
+     * @param secret             生成密钥的密文
+     */
+    public static void generateKey(String publicKeyFilename, String privateKeyFilename, String secret, int keySize) throws Exception {
+        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
+        SecureRandom secureRandom = new SecureRandom(secret.getBytes());
+        keyPairGenerator.initialize(Math.max(keySize, DEFAULT_KEY_SIZE), secureRandom);
+        KeyPair keyPair = keyPairGenerator.genKeyPair();
+        // 获取公钥并写出
+        byte[] publicKeyBytes = keyPair.getPublic().getEncoded();
+        publicKeyBytes = Base64.getEncoder().encode(publicKeyBytes);
+        writeFile(publicKeyFilename, publicKeyBytes);
+        // 获取私钥并写出
+        byte[] privateKeyBytes = keyPair.getPrivate().getEncoded();
+        privateKeyBytes = Base64.getEncoder().encode(privateKeyBytes);
+        writeFile(privateKeyFilename, privateKeyBytes);
+    }
+
+    private static byte[] readFile(String fileName) throws Exception {
+        return Files.readAllBytes(new File(fileName).toPath());
+    }
+
+    private static void writeFile(String destPath, byte[] bytes) throws IOException {
+        File dest = new File(destPath);
+        if (!dest.exists()) {
+            dest.createNewFile();
+        }
+        Files.write(dest.toPath(), bytes);
+    }
+}
+```
+
+##### JWT（Json Web Token）
+
+一款出色的分布式身份校验方案，方法：token的生成与解析检验。
+
+**组成的三部分**
+
+- 头部：主要设置一些规范信息，签名部分的编码格式就在头部中声明。
+- 载荷：token中存放有效信息的部分，比如用户名，用户角色，过期时间等，但是不要放密码，会泄露！ 
+- 签名：将头部与载荷分别采用base64编码后，用“.”相连，再加入盐，最后使用头部声明的编码类型进行编 码，就得到了签名。
+
+**JWT依赖包**
+
+```
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-api</artifactId>
+            <version>0.10.7</version>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-impl</artifactId>
+            <version>0.10.7</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-jackson</artifactId>
+            <version>0.10.7</version>
+            <scope>runtime</scope>
+        </dependency>
+```
+
+**载荷对象实体类（有效信息）**
+
+```
+@Data
+public class Payload<T> {
+    private String id;
+    private T userInfo;
+    private Date expiration;
+}
+```
+
+**JWT工具类Utils**
+
+```
+import com.itheima.domain.Payload;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jws;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import org.joda.time.DateTime;
+
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.util.Base64;
+import java.util.UUID;
+public class JwtUtils {
+
+    private static final String JWT_PAYLOAD_USER_KEY = "user";
+
+    /**
+     * 私钥加密token
+     *
+     * @param userInfo   载荷中的数据
+     * @param privateKey 私钥
+     * @param expire     过期时间，单位分钟
+     * @return JWT
+     */
+    public static String generateTokenExpireInMinutes(Object userInfo, PrivateKey privateKey, int expire) {
+        return Jwts.builder()
+                .claim(JWT_PAYLOAD_USER_KEY, JsonUtils.toString(userInfo))
+                .setId(createJTI())
+                .setExpiration(DateTime.now().plusMinutes(expire).toDate())
+                .signWith(privateKey, SignatureAlgorithm.RS256)
+                .compact();
+    }
+
+    /**
+     * 私钥加密token
+     *
+     * @param userInfo   载荷中的数据
+     * @param privateKey 私钥
+     * @param expire     过期时间，单位秒
+     * @return JWT
+     */
+    public static String generateTokenExpireInSeconds(Object userInfo, PrivateKey privateKey, int expire) {
+        return Jwts.builder()
+                .claim(JWT_PAYLOAD_USER_KEY, JsonUtils.toString(userInfo))
+                .setId(createJTI())
+                .setExpiration(DateTime.now().plusSeconds(expire).toDate())
+                .signWith(privateKey, SignatureAlgorithm.RS256)
+                .compact();
+    }
+
+    /**
+     * 公钥解析token
+     *
+     * @param token     用户请求中的token
+     * @param publicKey 公钥
+     * @return Jws<Claims>
+     */
+    private static Jws<Claims> parserToken(String token, PublicKey publicKey) {
+        return Jwts.parser().setSigningKey(publicKey).parseClaimsJws(token);
+    }
+
+    private static String createJTI() {
+        return new String(Base64.getEncoder().encode(UUID.randomUUID().toString().getBytes()));
+    }
+
+    /**
+     * 获取token中的用户信息
+     *
+     * @param token     用户请求中的令牌
+     * @param publicKey 公钥
+     * @return 用户信息
+     */
+    public static <T> Payload<T> getInfoFromToken(String token, PublicKey publicKey, Class<T> userType) {
+        Jws<Claims> claimsJws = parserToken(token, publicKey);
+        Claims body = claimsJws.getBody();
+        Payload<T> claims = new Payload<>();
+        claims.setId(body.getId());
+        claims.setUserInfo(JsonUtils.toBean(body.get(JWT_PAYLOAD_USER_KEY).toString(), userType));
+        claims.setExpiration(body.getExpiration());
+        return claims;
+    }
+
+    /**
+     * 获取token中的载荷信息
+     *
+     * @param token     用户请求中的令牌
+     * @param publicKey 公钥
+     * @return 用户信息
+     */
+    public static <T> Payload<T> getInfoFromToken(String token, PublicKey publicKey) {
+        Jws<Claims> claimsJws = parserToken(token, publicKey);
+        Claims body = claimsJws.getBody();
+        Payload<T> claims = new Payload<>();
+        claims.setId(body.getId());
+        claims.setExpiration(body.getExpiration());
+        return claims;
+    }
+}
+```
+
+##### Spring Security + JWT + RSA分布式认证思路
 
