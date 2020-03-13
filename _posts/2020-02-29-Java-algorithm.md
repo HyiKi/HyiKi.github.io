@@ -214,7 +214,7 @@ str = String.valueOf(bm);//char[]->String
 
 #### 九、数组
 
-System.arraycopy应用于自制数组ArrayList的remove删除元素
+**System.arraycopy应用于自制数组ArrayList的remove删除元素**
 
 System.arraycopy(elements, index + 1, elements, index, moveSize);
 
@@ -230,7 +230,7 @@ public static void arraycopy(Object src, int srcPos, Object dest, int destPos, i
 
 ------
 
-Arrays.copyOf() 应用于自制数组ArrayList的add扩容
+**Arrays.copyOf() 应用于自制数组ArrayList的add扩容**
 
 Arrays的copyOf()方法传回的数组是**新的数组对象**，改变传回数组中的元素值，不会影响原来的数组。
 copyOf()的第二个自变量指定要建立的**新数组长度**，如果新数组的长度**超过**原数组的长度，则**保留**数组默认值，例如：
@@ -259,7 +259,62 @@ public class ArrayDemo {
 1 2 3 4 5 0 0 0 0 0
 ```
 
+------
 
+**List, Integer[], int[]的相互转换**
+
+```
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+ 
+public class Main {
+    public static void main(String[] args) {
+        int[] data = {4, 5, 3, 6, 2, 5, 1};
+ 
+        // int[] 转 List<Integer>
+        List<Integer> list1 = Arrays.stream(data).boxed().collect(Collectors.toList());
+        // Arrays.stream(arr) 可以替换成IntStream.of(arr)。
+        // 1.使用Arrays.stream将int[]转换成IntStream。
+        // 2.使用IntStream中的boxed()装箱。将IntStream转换成Stream<Integer>。
+        // 3.使用Stream的collect()，将Stream<T>转换成List<T>，因此正是List<Integer>。
+ 
+        // int[] 转 Integer[]
+        Integer[] integers1 = Arrays.stream(data).boxed().toArray(Integer[]::new);
+        // 前两步同上，此时是Stream<Integer>。
+        // 然后使用Stream的toArray，传入IntFunction<A[]> generator。
+        // 这样就可以返回Integer数组。
+        // 不然默认是Object[]。
+ 
+        // List<Integer> 转 Integer[]
+        Integer[] integers2 = list1.toArray(new Integer[0]);
+        //  调用toArray。传入参数T[] a。这种用法是目前推荐的。
+        // List<String>转String[]也同理。
+ 
+        // List<Integer> 转 int[]
+        int[] arr1 = list1.stream().mapToInt(Integer::valueOf).toArray();
+        // 想要转换成int[]类型，就得先转成IntStream。
+        // 这里就通过mapToInt()把Stream<Integer>调用Integer::valueOf来转成IntStream
+        // 而IntStream中默认toArray()转成int[]。
+ 
+        // Integer[] 转 int[]
+        int[] arr2 = Arrays.stream(integers1).mapToInt(Integer::valueOf).toArray();
+        // 思路同上。先将Integer[]转成Stream<Integer>，再转成IntStream。
+ 
+        // Integer[] 转 List<Integer>
+        List<Integer> list2 = Arrays.asList(integers1);
+        // 最简单的方式。String[]转List<String>也同理。
+ 
+        // 同理
+        String[] strings1 = {"a", "b", "c"};
+        // String[] 转 List<String>
+        List<String> list3 = Arrays.asList(strings1);
+        // List<String> 转 String[]
+        String[] strings2 = list3.toArray(new String[0]);
+ 
+    }
+}
+```
 
 #### 十、进制
 
@@ -271,8 +326,243 @@ int a = Integer.valueOf(in.next(),2);
 
 十进制转二进制
 
+`BigInteger` -> `import java.text.*;`
+
 ```
 BigInteger b = BigInteger.valueOf(in.nextLong());
 String bin = b.toString(2);
 ```
 
+
+
+#### 十一、日期与时间
+
+##### 导包
+
+```
+import java.time.*;
+import java.time.format.*;
+```
+
+##### DateTimeFormatter
+
+```
+DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+String today = dateTimeFormatter.format(LocalDateTime.now());
+```
+
+##### LocalDateTime
+
+LocalDateTime 修改 Day、Hour、Minute
+
+LocalDate 修改 Day、Month、Year
+
+```
+LocalDateTime localDateTime = LocalDateTime.now();//2020-03-11T01:48:35.109
+LocalDateTime today_morning = localDateTime.withHour(9);//2020-03-11T09:48:35.109
+LocalDateTime localDate = localDate.parse("1998-12-20",dateTimeFormatter).atStartOfDay();
+```
+
+##### Duration
+
+```
+Duration duration = Duration.between(localDate,localDateTime);//后减前
+long days = duration.toDays();
+```
+
+
+
+#### 十二、StreamAPI
+
+##### 分组，计数和排序
+
+0导包
+
+```
+import java.util.function.Function;
+import java.util.stream.Collectors;
+```
+
+1.1分组`List`并显示其总数。
+
+Java8Example1.java
+
+```java
+public class Java8Example1 {
+    public static void main(String[] args) {
+        //3 apple, 2 banana, others 1
+        List<String> items =
+                Arrays.asList("apple", "apple", "banana",
+                        "apple", "orange", "banana", "papaya");
+        Map<String, Long> result =
+                items.stream().collect(
+                        Collectors.groupingBy(
+                                Function.identity(), Collectors.counting()
+                        )
+                );
+        System.out.println(result);
+    }
+}
+```
+
+Output
+
+```
+{
+	番木瓜= 1，橙= 1，香蕉= 2，苹果= 3
+}
+```
+
+1.2添加排序。
+
+Java8Example2.java
+
+```java
+public class Java8Example2 {
+    public static void main(String[] args) {
+        //3 apple, 2 banana, others 1
+        List<String> items =
+                Arrays.asList("apple", "apple", "banana",
+                        "apple", "orange", "banana", "papaya");
+        Map<String, Long> result =
+                items.stream().collect(
+                        Collectors.groupingBy(
+                                Function.identity(), Collectors.counting()
+                        )
+                );
+        Map<String, Long> finalMap = new LinkedHashMap<>();
+        //Sort a map and add to finalMap
+        result.entrySet().stream()
+                .sorted(Map.Entry.<String, Long>comparingByValue()
+                        .reversed()).forEachOrdered(e -> finalMap.put(e.getKey(), e.getValue()));
+        System.out.println(finalMap);
+    }
+}
+```
+
+Output
+
+```
+{
+	苹果= 3，香蕉= 2，木瓜= 1，橙= 1
+}
+```
+
+“分组”用户定义的对象列表的示例。
+
+2.1 Pojo。
+
+Item.java
+
+```java
+public class Item {
+    private String name;
+    private int qty;
+    private BigDecimal price;
+    //constructors, getter/setters
+}
+```
+
+2.2 按姓名+数字或数量组合。
+
+Java8Examples3.java
+
+```java
+public class Java8Examples3 {
+    public static void main(String[] args) {
+        //3 apple, 2 banana, others 1
+        List<Item> items = Arrays.asList(
+                new Item("apple", 10, new BigDecimal("9.99")),
+                new Item("banana", 20, new BigDecimal("19.99")),
+                new Item("orang", 10, new BigDecimal("29.99")),
+                new Item("watermelon", 10, new BigDecimal("29.99")),
+                new Item("papaya", 20, new BigDecimal("9.99")),
+                new Item("apple", 10, new BigDecimal("9.99")),
+                new Item("banana", 10, new BigDecimal("19.99")),
+                new Item("apple", 20, new BigDecimal("9.99"))
+        );
+        Map<String, Long> counting = items.stream().collect(
+                Collectors.groupingBy(Item::getName, Collectors.counting()));
+        System.out.println(counting);
+        Map<String, Integer> sum = items.stream().collect(
+                Collectors.groupingBy(Item::getName, Collectors.summingInt(Item::getQty)));
+        System.out.println(sum);
+    }
+}
+```
+
+Output
+
+```
+// Group by + Count
+{
+	番木瓜= 1，香蕉= 2，苹果= 3，猩猩= 1，西瓜= 1
+}
+
+// Group by + Sum qty
+{
+	番木瓜= 20，香蕉= 30，苹果= 40，orang = 10，西瓜= 10
+}
+```
+
+2.2按价格分组 - `Collectors.groupingBy`以`Collectors.mapping`示例为例。
+
+Java8Examples4.java
+
+```java
+public class Java8Examples4 {
+    public static void main(String[] args) {
+        //3 apple, 2 banana, others 1
+        List<Item> items = Arrays.asList(
+                new Item("apple", 10, new BigDecimal("9.99")),
+                new Item("banana", 20, new BigDecimal("19.99")),
+                new Item("orang", 10, new BigDecimal("29.99")),
+                new Item("watermelon", 10, new BigDecimal("29.99")),
+                new Item("papaya", 20, new BigDecimal("9.99")),
+                new Item("apple", 10, new BigDecimal("9.99")),
+                new Item("banana", 10, new BigDecimal("19.99")),
+                new Item("apple", 20, new BigDecimal("9.99"))
+                );
+		//group by price
+        Map<BigDecimal, List<Item>> groupByPriceMap =
+			items.stream().collect(Collectors.groupingBy(Item::getPrice));
+        System.out.println(groupByPriceMap);
+		// group by price, uses 'mapping' to convert List<Item> to Set<String>
+        Map<BigDecimal, Set<String>> result =
+                items.stream().collect(
+                        Collectors.groupingBy(Item::getPrice,
+                                Collectors.mapping(Item::getName, Collectors.toSet())
+                        )
+                );
+        System.out.println(result);
+    }
+}
+```
+
+Output
+
+```
+{
+	19.99 = [
+			Item {name ='banana'，qty = 20，price = 19.99}， 
+			Item {name ='banana'，qty = 10，price = 19.99}
+		] 
+	29.99 = [
+			Item {name ='orang'，qty = 10，price = 29.99}， 
+			Item {name ='watermelon'，qty = 10，price = 29.99}
+		] 
+	9.99 = [
+			Item {name ='apple'，qty = 10，price = 9.99}， 
+			Item {name ='papaya'，qty = 20，price = 9.99}， 
+			Item {name ='apple'，qty = 10，price = 9.99}， 
+			Item {name ='apple'，qty = 20，price = 9.99}
+		]
+}
+
+// group by +映射到Set
+{
+	19.99 = [香蕉] 
+	29.99 = [orang，西瓜]， 
+	9.99 = [番木瓜，苹果]
+}
+```
