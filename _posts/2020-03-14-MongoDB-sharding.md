@@ -2,9 +2,10 @@
 title: MongoDB 分片集群
 date:  	2020-03-14 08:56:36 +0800
 category: Original
-tags: [MongoDB]
+tags: MongoDB
 excerpt: 横向扩展提高数据库性能的一种环境搭建
 ```
+
 
 ## 前言
 
