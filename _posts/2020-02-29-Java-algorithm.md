@@ -566,3 +566,23 @@ Output
 	9.99 = [番木瓜，苹果]
 }
 ```
+
+#### 十三、遍历
+
+List
+
+```
+ArrayList<Integer> arrayList = new ArrayList<>();
+for (Integer integer : arrayList) {
+
+}
+```
+
+Map
+
+```
+for (Map.Entry<Integer, Integer> integerIntegerEntry : hashMap.entrySet()) {
+
+}
+```
+

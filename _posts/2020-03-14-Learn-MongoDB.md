@@ -2,7 +2,7 @@
 title: MongoDB 学习笔记
 date:  	2020-03-13 08:56:36 +0800
 category: Original
-tags: MongoDB
+tags: [MongoDB,Learning]
 excerpt: Document类型数据库，持续更新的学习笔记。
 ---
 
@@ -16,10 +16,11 @@ MongoDB 是一个介于关系数据库和非关系数据库之间的产品，是
 
 1. 使用Docker部署，对应的仓库https://hub.docker.com/_/mongo
 2. `docker pull mongo`拉取线上仓库的MongoDB镜像
-3. `docker run --name some-mongo -d mongo:tag`将镜像变为容器，其中**some-mongo**为容器名，**tag**为需要创建的版本号
+3. `docker run --name some-mongo -p 27017:27017 -d mongo:tag`将镜像变为容器，其中**some-mongo**为容器名，**tag**为需要创建的版本号
 4. 通过`docker ps`就能看到创建的容器了
 5. `docker exec -it mongodb bash`（默认SHELL)就可以进入我刚刚创建的mongodb容器了
 6. 在容器中输入`mongo admin`以管理员身份进入MongoDB数据库
+7. 下载辅助工具`NoSQLBooster for MongoDB`，https://www.nosqlbooster.com/，利用创建用户的操作得到认证的账号密码
 
 ### 创建用户
 
@@ -516,7 +517,7 @@ db.test.update({name:"三国演义"},{$pull:{comments:"444"}})
 
 ### $
 
-既然是数组，我们当然可以通过下标来访问，如下一行操作表示将下标为0的(第一个comments)comments修改为999：
+既然是数组，我们当然可以通过下标来访问，如下一行操作表示将下标为0**comments.0**的(第一个comments)comments修改为999：
 
 ```
 db.test.update({name:"三国演义"},{$set:{"comments.0":"999"}})
@@ -528,7 +529,7 @@ db.test.update({name:"三国演义"},{$set:{"comments.0":"999"}})
 db.test.update({comments:"333"},{$set:{"comments.$":"333-1"}})
 ```
 
-查询条件查出来333的下标，符号就能将之修改。
+**comments.$**查询条件**查出来333的下标**，符号就能将之修改。
 
 ### save
 
@@ -539,3 +540,132 @@ save是shell中的一个函数，接收一个参数，这个参数就是文档�
 ```
 db.test.save({x:111})
 ```
+
+### null
+
+null的查询稍微有点不同，假如我想查询z为null的数据，如下：
+
+```
+db.test.find({z:null})
+```
+
+这样不仅会查出z为null的文档，也会查出所有没有z字段的文档，如果只想查询z为null的字段，那就再多加一个条件，判断一下z这个字段存在不**$exists:true**，如下：
+
+```
+db.test.find({z:{$in:[null],$exists:true}})
+```
+
+### 数组查询
+
+假设我有一个数据集如下：
+
+```
+{
+    "_id" : ObjectId("59f1ad41e26b36b25bc605ae"),
+    "books" : [ 
+        "三国演义", 
+        "红楼梦", 
+        "水浒传"
+    ]
+}
+```
+
+查询books中含有三国演义的文档，如下：
+
+```
+db.test.find({books:"三国演义"})
+```
+
+如果要查询既有三国演义又有红楼梦的文档，可以使用**$all**，如下：
+
+```
+db.test.find({books:{$all:["三国演义","红楼梦"]}})
+```
+
+当然我们也可以使用精确匹配，比如查询books为`"三国演义","红楼梦", "水浒传"`的数据，如下：
+
+```
+db.test.find({books:["三国演义","红楼梦", "水浒传"]})
+```
+
+不过这种就会一对一的精确匹配。
+
+也可以按照下标匹配，比如我想查询数组中下标为2的项**books.2**的为`"水浒传"`的文档，如下：
+
+```
+db.test.find({"books.2":"水浒传"})
+```
+
+也可以按照数组长度来查询，比如我想查询数组长度为3的文档**$size:3**：
+
+```
+db.test.find({books:{$size:3}})
+```
+
+如果想查询数组中的前两条数据，可以使用**$slice**，如下：
+
+```
+db.test.find({},{books:{$slice:2}})
+```
+
+注意这里要写在find的第二个参数的位置。**2表示数组中前两个元素**，**-2表示从后往前数两个元素**。也可以截取数组中间的元素，比如查询数组的第二个到第四个元素：
+
+```
+db.test.find({},{books:{$slice:[1,3]}})
+```
+
+数组中的与的问题也值得说一下，假设我有如下数据：
+
+```
+{
+    "_id" : ObjectId("59f208bc7b00f982986c669c"),
+    "x" : [ 
+        5.0, 
+        25.0
+    ]
+}
+```
+
+我想将数组中value取值在(10,20)之间的文档获取到，如下操作：
+
+```
+db.test.find({x:{$lt:20,$gt:10}})
+```
+
+此时上面这个文档虽然不满足条件却依然被查找出来了，因为`5<20`，而`25>10`，要解决这个问题，我们可以使用$elemMatch，如下：
+
+```
+db.test.find({x:{$elemMatch:{$lt:20,$gt:10}}})
+```
+
+$elemMatch要求MongoDB同时使用查询条件中的两个语句与一个数组元素进行比较。
+
+### 嵌套文档查询
+
+嵌套文档有两种查询方式，比如我的数据如下：
+
+```
+{
+    "_id" : ObjectId("59f20c9b7b00f982986c669f"),
+    "x" : 1.0,
+    "y" : {
+        "z" : 2.0,
+        "k" : 3.0
+    }
+}
+```
+
+想要查询上面这个文档，我的查询语句如下：
+
+```
+db.test.find({y:{z:2,k:3}})
+```
+
+但是这种写法要求严格匹配，顺序都不能变，假如写成了`db.sang_collect.find({y:{k:3,z:2}})`，就匹配不到了，因此这种方法不够灵活，我们一般推荐的是下面这种写法：
+
+```
+db.test.find({"y.z":2,"y.k":3})
+```
+
+这种写法可以任意颠倒顺序。
+
