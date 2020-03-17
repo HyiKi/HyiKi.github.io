@@ -62,6 +62,12 @@ excerpt: 用于长期可更新的常见注解的学习笔记
 - @Autowired`自动注入`
 - @Bean
 
+### SpringBoot
+
+- @SpringBootConfiguration
+- @EnableAutoConfiguration
+- @ComponentScan
+
 ### 启动类
 
 - @SpringBootApplication
