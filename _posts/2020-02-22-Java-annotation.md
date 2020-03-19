@@ -1,5 +1,4 @@
 ---
-
 title: 常见注解的学习笔记
 date:  	2020-02-22 21:56:36 +0800
 category: Original
@@ -48,7 +47,7 @@ excerpt: 用于长期可更新的常见注解的学习笔记
 - Retention(RetentionPolicy.生命周期)
 - Target({ElementType.作用位置,……})
 
-### Spring框架
+### Spring
 
 - @RestController`控制层`
   - @Controller
@@ -65,8 +64,12 @@ excerpt: 用于长期可更新的常见注解的学习笔记
 ### SpringBoot
 
 - @SpringBootConfiguration
-- @EnableAutoConfiguration
-- @ComponentScan
+- @EnableAutoConfiguration`可以智能的自动配置`
+- @ComponentScan`做的事情就是告诉Spring从哪里找到bean`
+- **@ConfigurationProperties和@EnableConfigurationProperties配合使用**
+  - @ConfigurationProperties("")`读取配置文件指定Bean注入当前类`
+    - @PostConstruct`在依赖注入完毕后再进行`
+  - @EnableConfigurationProperties(类名.class)`将当前类放入IOC容器中` 
 
 ### 启动类
 
