@@ -56,6 +56,65 @@ excerpt: 用于长期可更新的常见注解的学习笔记
 - @PostMapping(url)
 - @Service`业务层`
 
+### RestfulAPI
+
+- @RestController `标明此Controller提供RestAPI`
+
+- @RequestMapping及其变体`映射http请求url到java方法`
+
+- @RequestParam `映射请求参数到java方法的参数`
+
+  ```
+  (@RequestParam(name="username",required=false,defaultValue="myName") String nickname
+  ```
+
+- @PageableDefault `指定分页参数默认值`
+
+  ```
+  @PageableDefault(page=1,size=10,sort="username,asc")
+  //查询第一页，查询10条，按照用户名升序排列
+  ```
+
+- @PathVariable `映射url片段到java方法的参数`
+
+  ```
+  @RequestMapping(value="/user/{id}",method=RequestMethod.GET)
+  public User getInfo(@PathVariable String id) {
+  }
+  ```
+
+- 在url声明中使用正则表达式
+
+  ```
+  @RequestMapping(value="/user/{id:\\d+}",method=RequestMethod.GET)//如果希望对传递进来的参数作一些限制，使用正则表达式
+  ```
+
+- @JsonView `控制json输出内容`
+  实体类设置：
+
+  ```
+  public interface UserSimpleView{};
+  //有了该继承关系，在显示detail视图的时候同时会把simple视图的所有字段也显示出来
+  public interface UserDetailView extends UserSimpleView{};
+  ...
+  @JsonView(UserSimpleView.class)
+  public String getId() {
+  	return id;
+  }
+  ...
+  ```
+
+  具体实现（控制层）：
+
+  ```
+  @GetMapping
+  @JsonView(User.UserSimpleView.class)
+  public List<User> query(@RequestParam(name="username",required=false,defaultValue="tom") String username){
+      ...
+      return user;
+  }
+  ```
+
 ### SpringIOC
 
 - @Autowired`自动注入`
