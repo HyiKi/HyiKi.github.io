@@ -71,11 +71,15 @@ ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY 'myPassword'; #�
 FLUSH PRIVILEGES; #刷新权限
 ```
 
-
-
 #### 更多镜像
 
 docker官方镜像仓库`https://hub.docker.com/`
+
+#### 删除镜像
+
+```
+docker rmi 镜像id
+```
 
 #### 从容器里面拷文件到宿主机
 
@@ -99,98 +103,90 @@ docker images
 
 ```
 docker ps
-
 ```
 
 #### 进入正在运行的容器
 
 ```
 docker exec -it 容器 /bin/bash
-
 ```
 
 #### 启动容器
 
 ```
 docker start 容器
+```
 
+#### 查看容器日志文件
+
+```
+docker logs 容器
 ```
 
 #### 终止容器
 
 ```
 docker stop 容器
-
 ```
 
 #### 重启容器
 
 ```
 docker restart 容器
-
 ```
 
 #### 删除容器
 
 ```
 docker rm 容器
-
 ```
 
 #### 导出容器
 
 ```
 docker export 容器 > default.tar
-
 ```
 
 #### 导入容器
 
 ```
 docker import default.tar 镜像
-
 ```
 
 #### 拉取redis
 
 ```
 docker pull redis:latest
-
 ```
 
 #### 生成redis容器
 
 ```
 docker run -it --name redis-blog -d -p 6379:6379 redis
-
 ```
 
 #### 拉取**elasticsearch**
 
 ```
 docker pull docker.elastic.co/elasticsearch/elasticsearch:6.7.2
-
 ```
 
 #### 生成**elasticsearch**容器
 
 ```
 docker run -d -p 9200:9200 -p 9300:9300 --name="elastic-blog" -e ES_JAVA_OPTS="-Xms256m -Xmx256m" docker.elastic.co/elasticsearch/elasticsearch:6.7.2
-
 ```
 
 #### 拉取rabbitMQ
 
 ```
 docker pull rabbitmq:management
-
 ```
 
 #### 生成rabbitMQ容器
 
 ```
 docker run -d -p 5672:5672 -p 15672:15672 --name rabbitmq-blog rabbitmq:management
-
 ```
 
 #### 
